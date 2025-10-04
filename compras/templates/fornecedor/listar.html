@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+<main class="container my-4">
+
+    <div class="card mb-4">
+        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h1 class="h5 mb-0">Fornecedores</h1>
+
+            <div class="d-flex align-items-center gap-2">
+                <form class="d-flex" method="get" action="">
+                    <input type="search" name="q" value="{{ request.GET.q|default:'' }}" class="form-control"
+                        placeholder="Buscar por nome..." aria-label="Buscar fornecedores">
+                </form>
+
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalFornecedor">
+                    + Novo fornecedor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 96px;"></th>
+                        <th>Nome</th>
+                        <th style="width: 220px;" class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if fornecedores %}
+                    {% for f in fornecedores %}
+                    <tr>
+                        <td class="text-muted">#{{ f.id }}</td>
+                        <td>{{ f.nome }}</td>
+                        <td class="text-end">
+                            <a href="#" class="btn btn-sm btn-outline-primary btn-editar-fornecedor"
+                                data-id="{{ fornecedor.id }}" data-nome="{{ fornecedor.nome }}">Alterar</a>
+                            <a href="#" class="btn btn-sm btn-outline-danger" data-id="{{ f.id }}"
+                                data-nome="{{ f.nome }}" onclick="confirmarExclusao(this)">Excluir</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            Nenhum fornecedor encontrado.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj %}
+        <div class="card-body">
+            <nav aria-label="Paginação de fornecedores">
+                <ul class="pagination mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                            aria-label="Anterior">«</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">«</span></li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}"
+                            aria-label="Próxima">»</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">»</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="modalConfirmarExclusao" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-white">
+                    <h5 class="modal-title" id="modalLabel">Confirmar exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza de que deseja excluir o fornecedor <strong id="fornecedorNome"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarSim">Sim</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalFornecedor" tabindex="-1" aria-labelledby="modalFornecedorLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="formFornecedor" class="modal-content">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalFornecedorLabel">Novo fornecedor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="fornecedor-nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="fornecedor-nome" name="nome" maxlength="100"
+                            required>
+                        <div class="invalid-feedback" id="erro-nome"></div>
+                    </div>
+                    <div class="alert alert-danger d-none" id="erro-geral"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarFornecedor">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Fornecedor -->
+    <div class="modal fade" id="modalEditarFornecedor" tabindex="-1" aria-labelledby="edtFornecedorLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="formEditarFornecedor" class="modal-content">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="edt-id">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="edtFornecedorLabel">Editar fornecedor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edt-nome" class="form-label">Nome</label>
+                        <input type="text" class="form-control" id="edt-nome" name="nome" maxlength="100" required>
+                        <div class="invalid-feedback" id="edt-erro-nome"></div>
+                    </div>
+                    <div class="alert alert-danger d-none" id="edt-erro-geral"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnSalvarEdicao">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- (Opcional) Container para alerts -->
+    <div id="alert-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index:1080;"></div>
+
+    <script>
+        (function () {
+            const form = document.getElementById('formFornecedor');
+            const btnSalvar = document.getElementById('btnSalvarFornecedor');
+            const modalEl = document.getElementById('modalFornecedor');
+            const erroNome = document.getElementById('erro-nome');
+            const erroGeral = document.getElementById('erro-geral');
+
+            function getCsrfToken() {
+                // Prioriza input gerado por {% csrf_token %} dentro do form
+                const input = form.querySelector('input[name=csrfmiddlewaretoken]');
+                if (input) return input.value;
+
+                // Fallback: via cookie
+                const m = document.cookie.match(/csrftoken=([^;]+)/);
+                return m ? m[1] : '';
+            }
+
+            function setFieldError(msg) {
+                const nomeInput = document.getElementById('fornecedor-nome');
+                nomeInput.classList.add('is-invalid');
+                erroNome.textContent = msg || 'Campo obrigatório.';
+            }
+
+            function clearErrors() {
+                document.getElementById('fornecedor-nome').classList.remove('is-invalid');
+                erroNome.textContent = '';
+                erroGeral.classList.add('d-none');
+                erroGeral.textContent = '';
+            }
+
+            function showAlert(message, type = 'success') {
+                const id = 'alert-' + Date.now();
+                const html = `
+      <div id="${id}" class="alert alert-${type} alert-dismissible fade show mt-3 shadow-sm" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+      </div>`;
+                document.getElementById('alert-container').insertAdjacentHTML('beforeend', html);
+                setTimeout(() => {
+                    const el = document.getElementById(id);
+                    if (el) el.remove();
+                }, 3500);
+            }
+
+            async function criarFornecedor(event) {
+                event.preventDefault();
+                clearErrors();
+
+                const nome = (document.getElementById('fornecedor-nome').value || '').trim();
+                if (!nome) {
+                    setFieldError('Informe o nome do fornecedor.');
+                    return;
+                }
+
+                btnSalvar.disabled = true;
+
+                try {
+                    const formData = new FormData(form);
+                    const resp = await fetch('/compra/fornecedor/cadastrar/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCsrfToken(),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.ok) {
+                        if (data && data.errors && data.errors.nome) {
+                            setFieldError(data.errors.nome.join(' '));
+                        } else {
+                            erroGeral.classList.remove('d-none');
+                            erroGeral.textContent = 'Não foi possível salvar. Tente novamente.';
+                        }
+                        return;
+                    }
+
+                    // Sucesso: fecha modal, limpa formulário e feedback
+                    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                    modal.hide();
+                    form.reset();
+                    showAlert('Fornecedor cadastrado com sucesso!');
+
+                    // (Opcional) Atualiza a tabela sem recarregar
+                    // Se existir uma tabela com id="tabela-fornecedores" e <tbody>
+                    const tbody = document.querySelector('#tabela-fornecedores tbody');
+                    if (tbody) {
+                        // Exemplo simples: insere no topo
+                        tbody.insertAdjacentHTML('afterbegin', `
+                            <tr data-id="${data.id}">
+                                <td>${data.id}</td>
+                                <td>${data.nome}</td>
+                                <td class="text-end">
+                                <!-- ajuste os endpoints conforme seu projeto -->
+                                <button class="btn btn-sm btn-danger" data-action="remover" data-id="${data.id}">
+                                    Excluir
+                                </button>
+                                </td>
+                            </tr>
+                            `);
+                    }
+
+                } catch (e) {
+                    erroGeral.classList.remove('d-none');
+                    erroGeral.textContent = 'Erro de rede ou servidor. Tente novamente.';
+                } finally {
+                    btnSalvar.disabled = false;
+                }
+            }
+
+            form.addEventListener('submit', criarFornecedor);
+
+            // Limpa erros ao reabrir a modal
+            modalEl.addEventListener('show.bs.modal', clearErrors);
+        })();
+
+        (function () {
+            const modalEl = document.getElementById('modalEditarFornecedor');
+            const form = document.getElementById('formEditarFornecedor');
+            const btnSalvar = document.getElementById('btnSalvarEdicao');
+            const inputId = document.getElementById('edt-id');
+            const inputNome = document.getElementById('edt-nome');
+            const erroNome = document.getElementById('edt-erro-nome');
+            const erroGeral = document.getElementById('edt-erro-geral');
+
+            const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+            function getCsrfToken() {
+                const input = form.querySelector('input[name=csrfmiddlewaretoken]');
+                if (input) return input.value;
+                const m = document.cookie.match(/csrftoken=([^;]+)/);
+                return m ? m[1] : '';
+            }
+
+            function clearErrors() {
+                inputNome.classList.remove('is-invalid');
+                erroNome.textContent = '';
+                erroGeral.classList.add('d-none');
+                erroGeral.textContent = '';
+            }
+
+            function setFieldError(msg) {
+                inputNome.classList.add('is-invalid');
+                erroNome.textContent = msg || 'Campo obrigatório.';
+            }
+
+            function showAlert(message, type = 'success') {
+                const id = 'alert-' + Date.now();
+                const html = `
+      <div id="${id}" class="alert alert-${type} alert-dismissible fade show mt-3 shadow-sm" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+      </div>`;
+                document.getElementById('alert-container').insertAdjacentHTML('beforeend', html);
+                setTimeout(() => document.getElementById(id)?.remove(), 3500);
+            }
+
+            // Abre modal preenchida a partir do botão "Editar"
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-editar-fornecedor');
+                if (!btn) return;
+
+                clearErrors();
+                inputId.value = btn.dataset.id;
+                inputNome.value = btn.dataset.nome || '';
+                bsModal.show();
+            });
+
+            // Submit da edição
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                clearErrors();
+
+                const id = inputId.value;
+                const nome = (inputNome.value || '').trim();
+                if (!id) { erroGeral.classList.remove('d-none'); erroGeral.textContent = 'ID inválido.'; return; }
+                if (!nome) { setFieldError('Informe o nome.'); return; }
+
+                btnSalvar.disabled = true;
+
+                try {
+                    const fd = new FormData(form); // contém nome + csrf
+                    const resp = await fetch(`/compra/fornecedor/alterar/${id}/`, {
+                        method: 'POST', // sua view aceita POST para alterar
+                        headers: {
+                            'X-CSRFToken': getCsrfToken(),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: fd
+                    });
+
+                    const data = await resp.json();
+
+                    if (!resp.ok || !data.ok) {
+                        if (data?.errors?.nome) {
+                            setFieldError(data.errors.nome.join(' '));
+                        } else {
+                            erroGeral.classList.remove('d-none');
+                            erroGeral.textContent = 'Não foi possível salvar. Tente novamente.';
+                        }
+                        return;
+                    }
+
+                    // Sucesso: fecha modal, feedback e atualiza a linha na tabela (se existir)
+                    bsModal.hide();
+                    showAlert('Fornecedor atualizado com sucesso!');
+
+                    const row = document.querySelector(`tr[data-id="${id}"]`);
+                    if (row) {
+                        // Supondo que a 2ª <td> é o nome
+                        const nomeCell = row.querySelector('td:nth-child(2)');
+                        if (nomeCell) nomeCell.textContent = data.nome;
+
+                        // Atualiza o botão de editar com o novo nome
+                        const btnEditar = row.querySelector('.btn-editar-fornecedor');
+                        if (btnEditar) btnEditar.dataset.nome = data.nome;
+                    }
+
+                } catch (err) {
+                    erroGeral.classList.remove('d-none');
+                    erroGeral.textContent = 'Erro de rede ou servidor. Tente novamente.';
+                } finally {
+                    btnSalvar.disabled = false;
+                }
+            });
+
+            // Limpa erros ao reabrir
+            modalEl.addEventListener('show.bs.modal', clearErrors);
+        })();
+
+        let fornecedorId = null;
+
+        function confirmarExclusao(botao) {
+            fornecedorId = botao.getAttribute("data-id");
+            const nome = botao.getAttribute("data-nome");
+            document.getElementById("fornecedorNome").textContent = nome;
+
+            const modal = new bootstrap.Modal(document.getElementById("modalConfirmarExclusao"));
+            modal.show();
+
+            const botaoConfirmar = document.getElementById("btnConfirmarSim");
+            botaoConfirmar.onclick = function () {
+                removerFornecedor(fornecedorId);
+                modal.hide();
+            };
+        }
+
+        function removerFornecedor(id) {
+            fetch(`/compra/fornecedor/remover/${id}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Fornecedor removido com sucesso!");
+                        location.reload();
+                    } else {
+                        alert("Erro ao remover fornecedor.");
+                    }
+                })
+                .catch(() => alert("Falha na comunicação com o servidor."));
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</main>
+{% endblock content %}
