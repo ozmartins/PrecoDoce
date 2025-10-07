@@ -6,16 +6,19 @@ from django.core.validators import MinValueValidator
 class Fornecedor(models.Model):    
     nome = models.CharField(max_length=100)
 
+
 class Insumo(models.Model):
     tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     nome = models.CharField(max_length=100)
     ultimo_custo = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+
 
 class Compra(models.Model):
     tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     data_hora = models.DateTimeField()
     total = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     id_fornecedor = models.ForeignKey(Fornecedor, on_delete=models.RESTRICT)
+
 
 class CompraItem(models.Model):
     tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -24,6 +27,7 @@ class CompraItem(models.Model):
     total = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     id_insumo = models.ForeignKey(Insumo, on_delete=models.RESTRICT)
     id_compra = models.ForeignKey(Compra, on_delete=models.CASCADE)
+
 
 class FichaKardex(models.Model):    
     tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
