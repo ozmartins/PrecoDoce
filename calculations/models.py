@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.db import models
 from django.core.validators import MinValueValidator
-from receitas.models import Product
+from recipes.models import Product
 from purchases.models import Ingredient
 
 class RecipeCostSheet(models.Model):    

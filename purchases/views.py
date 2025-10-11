@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_POST, require_GET
-from .models import Supplier, Insumo
+from .models import Supplier, Ingredient
 from .forms import SupplierForm
 
 
@@ -23,7 +23,7 @@ def supplier_recover(request):
     })
 
 @require_POST
-def supplier_cadastrar(request):
+def supplier_create(request):
     form = SupplierForm(request.POST)
     if not form.is_valid():
         if is_ajax(request):
@@ -35,7 +35,7 @@ def supplier_cadastrar(request):
     return redirect('purchases:supplier_recover')
 
 @require_POST
-def supplier_alterar(request, pk: int):
+def supplier_update(request, pk: int):
     supplier = get_object_or_404(Supplier, pk=pk)
     form = SupplierForm(request.POST, instance=supplier)
     if not form.is_valid():
@@ -48,7 +48,7 @@ def supplier_alterar(request, pk: int):
     return redirect('purchases:supplier_recover')
 
 @require_POST
-def supplier_remover(request, pk: int):
+def supplier_delete(request, pk: int):
     supplier = get_object_or_404(Supplier, pk=pk)
     supplier.delete()
     if is_ajax(request):
@@ -59,9 +59,9 @@ def supplier_remover(request, pk: int):
 # --- INSUMOS ---
 
 @require_GET
-def insumo_recover(request):
+def ingredient_recover(request):
     q = request.GET.get('q', '')
-    qs = Insumo.objects.all().order_by('nome')
+    qs = Ingredient.objects.all().order_by('nome')
     if q:
         qs = qs.filter(nome__icontains=q)
     page_obj = Paginator(qs, 10).get_page(request.GET.get('page'))
@@ -71,7 +71,7 @@ def insumo_recover(request):
     })
 
 @require_POST
-def insumo_cadastrar(request):
+def ingredient_create(request):
     form = SupplierForm(request.POST)
     if not form.is_valid():
         if is_ajax(request):
@@ -81,10 +81,10 @@ def insumo_cadastrar(request):
     if is_ajax(request):
         return JsonResponse({'ok': True, 'id': supplier.pk, 'nome': supplier.nome})
 
-    return redirect('purchases:insumo_recover')
+    return redirect('purchases:ingredient_recover')
 
 @require_POST
-def insumo_alterar(request, pk: int):
+def ingredient_update(request, pk: int):
     supplier = get_object_or_404(Supplier, pk=pk)
     form = SupplierForm(request.POST, instance=supplier)
     if not form.is_valid():
@@ -94,12 +94,12 @@ def insumo_alterar(request, pk: int):
     supplier = form.save()
     if is_ajax(request):
         return JsonResponse({'ok': True, 'id': supplier.pk, 'nome': supplier.nome})
-    return redirect('purchases:insumo_recover')
+    return redirect('purchases:ingredient_recover')
 
 @require_POST
-def insumo_remover(request, pk: int):
+def ingredient_delete(request, pk: int):
     supplier = get_object_or_404(Supplier, pk=pk)
     supplier.delete()
     if is_ajax(request):
         return JsonResponse({'ok': True})
-    return redirect('purchases:insumo_recover')
+    return redirect('purchases:ingredient_recover')

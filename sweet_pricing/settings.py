@@ -14,7 +14,7 @@ INSTALLED_APPS = [
     'dashboard',
     'calculations',
     'purchases',    
-    'recipe'
+    'recipes'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
