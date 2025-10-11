@@ -9,7 +9,7 @@ class Fornecedor(models.Model):
 
 class Insumo(models.Model):
     nome = models.CharField(max_length=100)
-    ultimo_custo = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    #ultimo_custo = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
 
 
 class Compra(models.Model):

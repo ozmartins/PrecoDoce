@@ -14,8 +14,7 @@ class FornecedorForm(forms.ModelForm):
 class InsumoForm(forms.ModelForm):
     class Meta:
         model = Insumo
-        fields = ["nome", "ultimo_custo"]
+        fields = ["nome"]
         widgets = {
-            "nome": forms.TextInput(attrs={"class": "form-control", "maxlength": 100}),
-            "ultimo_custo": forms.NumberInput(attrs={"class": "form-control"}),
+            "nome": forms.TextInput(attrs={"class": "form-control", "maxlength": 100})            
         }
