@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% load static %}
 
 {% block content %}
@@ -15,7 +16,7 @@
                     <button class="btn btn-outline-secondary ms-2" type="submit">Buscar</button>
                 </form>
 
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalFornecedor">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalSupplier">
                     + Novo fornecedor
                 </button>
             </div>
@@ -24,7 +25,7 @@
 
     <div class="card">
         <div class="table-responsive">
-            <table id="tabela-fornecedores" class="table align-middle mb-0">
+            <table id="table-suppliers" class="table align-middle mb-0">
                 <thead>
                     <tr>
                         <th style="width: 96px;"></th>
@@ -33,18 +34,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% if fornecedores %}
-                    {% for f in fornecedores %}
+                    {% if suppliers %}
+                    {% for s in suppliers %}
                     <tr data-id="{{ f.id }}">
                         <td class="text-muted">#{{ f.id }}</td>
-                        <td>{{ f.nome }}</td>
+                        <td>{{ s.name }}</td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-primary btn-editar-fornecedor"
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-edit-supplier"
                                 data-id="{{ f.id }}" data-nome="{{ f.nome }}">
                                 Alterar
                             </button>
 
-                            <button type="button" class="btn btn-sm btn-outline-danger btn-excluir-fornecedor"
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-supplier"
                                 data-id="{{ f.id }}" data-nome="{{ f.nome }}">
                                 Excluir
                             </button>
@@ -121,13 +122,13 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalFornecedor" tabindex="-1" aria-labelledby="modalFornecedorLabel"
+    <div class="modal fade" id="modalSupplier" tabindex="-1" aria-labelledby="modalSupplierLabel"
         aria-hidden="true">
         <div class="modal-dialog">
             <form id="formFornecedor" class="modal-content">
                 {% csrf_token %}
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalFornecedorLabel">Novo fornecedor</h5>
+                    <h5 class="modal-title" id="modalSupplierLabel">Novo fornecedor</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
 
@@ -151,7 +152,7 @@
     <div class="modal fade" id="modalEditarFornecedor" tabindex="-1" aria-labelledby="edtFornecedorLabel"
         aria-hidden="true">
         <div class="modal-dialog">
-            <form id="formEditarFornecedor" class="modal-content">
+            <form id="formEditFornecedor" class="modal-content">
                 {% csrf_token %}
                 <input type="hidden" name="id" id="edt-id">
                 <div class="modal-header">
@@ -168,7 +169,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnEditarSalvar">Salvar</button>
+                    <button type="submit" class="btn btn-primary" id="btnEditSalvar">Salvar</button>
                 </div>
             </form>
         </div>
@@ -216,16 +217,16 @@
                 document.querySelector('input[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken') || '';
 
             const tabela = $('#tabela-fornecedores tbody');
-            const modalNovoEl = $('#modalFornecedor');
-            const modalEditarEl = $('#modalEditarFornecedor');
+            const modalNovoEl = $('#modalSupplier');
+            const modalEditEl = $('#modalEditFornecedor');
             const modalExcluirEl = $('#modalConfirmarExclusao');
 
             const bsModalNovo = () => bootstrap.Modal.getOrCreateInstance(modalNovoEl);
-            const bsModalEditar = () => bootstrap.Modal.getOrCreateInstance(modalEditarEl);
+            const bsModalEdit = () => bootstrap.Modal.getOrCreateInstance(modalEditEl);
             const bsModalExc = () => bootstrap.Modal.getOrCreateInstance(modalExcluirEl);
 
-            (function NovoFornecedor() {
-                const form = $('#formFornecedor');
+            (function NovoSupplier() {
+                const form = $('#formSupplier');
                 const btnSalvar = $('#btnNovoSalvar');
                 const inpNome = $('#novo-nome');
                 const errNome = $('#novo-erro-nome');
@@ -296,10 +297,10 @@
               <td>${nomeEsc}</td>
               <td class="text-end">
                 <button type="button"
-                        class="btn btn-sm btn-outline-primary btn-editar-fornecedor"
+                        class="btn btn-sm btn-outline-primary btn-edit-supplier"
                         data-id="${id}" data-nome="${nomeEsc}">Alterar</button>
                 <button type="button"
-                        class="btn btn-sm btn-outline-danger btn-excluir-fornecedor"
+                        class="btn btn-sm btn-outline-danger btn-delete-supplier"
                         data-id="${id}" data-nome="${nomeEsc}">Excluir</button>
               </td>
             </tr>`;
@@ -314,8 +315,8 @@
                 });
             })();
 
-            (function EditarFornecedor() {
-                const form = $('#formEditarFornecedor');
+            (function EditSupplier() {
+                const form = $('#formEditSupplier');
                 const btnSalvar = $('#btnEditarSalvar');
                 const inpId = $('#edt-id');
                 const inpNome = $('#edt-nome');
@@ -332,7 +333,7 @@
                 modalEditarEl.addEventListener('show.bs.modal', clearErrors);
 
                 document.addEventListener('click', (e) => {
-                    const btn = e.target.closest('.btn-editar-fornecedor');
+                    const btn = e.target.closest('.btn-edit-supplier');
                     if (!btn) return;
 
                     clearErrors();
@@ -385,9 +386,9 @@
                         if (row) {
                             const nomeCell = row.querySelector('td:nth-child(2)');
                             if (nomeCell) nomeCell.textContent = data.nome;
-                            const btnEditar = row.querySelector('.btn-editar-fornecedor');
+                            const btnEditar = row.querySelector('.btn-edit-supplier');
                             if (btnEditar) btnEditar.dataset.nome = data.nome;
-                            const btnExcluir = row.querySelector('.btn-excluir-fornecedor');
+                            const btnExcluir = row.querySelector('.btn-delete-supplier');
                             if (btnExcluir) btnExcluir.dataset.nome = data.nome;
                         }
 
@@ -400,11 +401,11 @@
                 });
             })();
 
-            (function ExcluirFornecedor() {
+            (function ExcluirSupplier() {
                 let fornecedorIdSelecionado = null;
 
                 document.addEventListener('click', (e) => {
-                    const btn = e.target.closest('.btn-excluir-fornecedor');
+                    const btn = e.target.closest('.btn-delete-supplier');
                     if (!btn) return;
 
                     fornecedorIdSelecionado = btn.dataset.id || '';

@@ -13,7 +13,7 @@ def is_ajax(request):
 @require_GET
 def supplier_recover(request):
     q = request.GET.get('q', '')
-    qs = Supplier.objects.all().order_by('nome')
+    qs = Supplier.objects.all().order_by('name')
     if q:
         qs = qs.filter(nome__icontains=q)
     page_obj = Paginator(qs, 10).get_page(request.GET.get('page'))
@@ -31,7 +31,7 @@ def supplier_create(request):
         return render(request, 'supplier.html', status=400)  
     supplier = form.save()
     if is_ajax(request):
-        return JsonResponse({'ok': True, 'id': supplier.pk, 'nome': supplier.nome})
+        return JsonResponse({'ok': True, 'id': supplier.pk, 'name': supplier.nome})
     return redirect('purchases:supplier_recover')
 
 @require_POST
@@ -56,8 +56,6 @@ def supplier_delete(request, pk: int):
     return redirect('purchases:supplier_recover')
 
 
-# --- INSUMOS ---
-
 @require_GET
 def ingredient_recover(request):
     q = request.GET.get('q', '')
@@ -65,8 +63,8 @@ def ingredient_recover(request):
     if q:
         qs = qs.filter(nome__icontains=q)
     page_obj = Paginator(qs, 10).get_page(request.GET.get('page'))
-    return render(request, 'insumo.html', {
-        'insumos': page_obj.object_list,
+    return render(request, 'ingredient.html', {
+        'ingredients': page_obj.object_list,
         'page_obj': page_obj,
     })
 
@@ -79,7 +77,7 @@ def ingredient_create(request):
         return render(request, 'supplier.html', status=400)  
     supplier = form.save()
     if is_ajax(request):
-        return JsonResponse({'ok': True, 'id': supplier.pk, 'nome': supplier.nome})
+        return JsonResponse({'ok': True, 'id': supplier.pk, 'name': supplier.name})
 
     return redirect('purchases:ingredient_recover')
 
@@ -93,7 +91,7 @@ def ingredient_update(request, pk: int):
         return render(request, 'supplier.html', status=400)
     supplier = form.save()
     if is_ajax(request):
-        return JsonResponse({'ok': True, 'id': supplier.pk, 'nome': supplier.nome})
+        return JsonResponse({'ok': True, 'id': supplier.pk, 'name': supplier.name})
     return redirect('purchases:ingredient_recover')
 
 @require_POST
