@@ -13,8 +13,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'dashboard',
     'calculations',
-    'compras',    
-    'receitas'
+    'purchases',    
+    'recipe'
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -25,7 +25,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',    
 ]
-ROOT_URLCONF = 'preco_doce.urls'
+ROOT_URLCONF = 'sweet_pricing.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -41,7 +41,7 @@ TEMPLATES = [
         },
     },
 ]
-WSGI_APPLICATION = 'preco_doce.wsgi.application'
+WSGI_APPLICATION = 'sweet_pricing.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
