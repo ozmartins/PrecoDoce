@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
-from compras.models import Insumo
+from purchases.models import Insumo
 
 class Receita(models.Model):
     #tenant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

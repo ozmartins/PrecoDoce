@@ -1,20 +1,19 @@
 from decimal import Decimal
 from django.db import models
-from django.conf import settings
 from django.core.validators import MinValueValidator
-from receitas.models import Produto
-from compras.models import Insumo
+from receitas.models import Product
+from purchases.models import Ingredient
 
 class RecipeCostSheet(models.Model):    
     calc_date_time = models.DateTimeField()
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
-    product_id = models.ForeignKey(Produto, on_delete=models.RESTRICT)
+    product_id = models.ForeignKey(Product, on_delete=models.RESTRICT)
 
 class RecipeCostSheetIngredient(models.Model):    
     quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
     recipe_cost_sheet_id = models.ForeignKey(RecipeCostSheet, on_delete=models.CASCADE)
-    id_insumo = models.ForeignKey(Insumo, on_delete=models.RESTRICT)
+    Ingredient_id = models.ForeignKey(Ingredient, on_delete=models.RESTRICT)
 
 class RecipeCostSheetOtherCosts(models.Model):    
     quantity = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
@@ -25,4 +24,4 @@ class RecipeCostSheetOtherCosts(models.Model):
 
 class RecipeCostSheetOtherCostsIngredient(models.Model):
     recipe_cost_sheet_other_costs_id = models.ForeignKey(RecipeCostSheetOtherCosts, on_delete=models.CASCADE)
-    ingredient_id = models.ForeignKey(Insumo, on_delete=models.RESTRICT)
+    ingredient_id = models.ForeignKey(Ingredient, on_delete=models.RESTRICT)
