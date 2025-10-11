@@ -12,7 +12,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'dashboard',
-    'calculos',
+    'calculations',
     'compras',    
     'receitas'
 ]
