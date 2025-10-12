@@ -1,4 +1,5 @@
-﻿INSERT INTO purchases_ingredient (name) VALUES
+﻿DELETE FROM purchases_ingredient;
+INSERT INTO purchases_ingredient (name) VALUES
 ('Farinha de trigo'),
 ('Açúcar refinado'),
 ('Açúcar mascavo'),
