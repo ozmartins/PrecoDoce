@@ -1,0 +1,492 @@
+{# templates/purchase.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <h1 class="h5 mb-0">New Purchase</h1>
+    </div>
+</div>
+
+<form id="purchaseForm" class="card" method="post" action="{% url 'purchases:purchase_create' %}">
+    {% csrf_token %}
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="col-md-8 position-relative">
+                    <label for="supplier-input" class="form-label">Supplier</label>
+                    <input id="supplier-input" type="text" class="form-control" autocomplete="off"
+                        placeholder="Type the supplier name" aria-autocomplete="list" aria-controls="supplier-suggest"
+                        aria-expanded="false">
+                    <input type="hidden" id="supplier-id" name="supplier">
+                    <div id="supplier-suggest" class="list-group position-absolute w-100 d-none" role="listbox"
+                        style="z-index: 1050; max-height: 260px; overflow: auto;"></div>
+                    <div id="supplier-error" class="invalid-feedback d-block d-none">Select a supplier.</div>
+                </div>
+            </div>
+            <div class="col-md-2 ms-auto">
+                <div class="d-flex flex-column align-items-start">
+                    <label for="purchase-date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="purchase-datetime" name="date" required>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body border-top">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="h6 mb-0">Items</h2>
+            <button type="button" class="btn btn-primary" id="btnAddItem">+ Add item</button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="items-table" class="table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Ingredient</th>
+                        <th style="width: 9%;">Unit</th>
+                        <th style="width: 9%;">Quantity</th>
+                        <th style="width: 18%;">Item total</th>
+                        <th style="width: 14%;" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="items-body">
+                    <tr class="empty-row">
+                        <td colspan="5" class="text-center text-muted py-4">No items yet.</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <label for="purchase-total" class="input-group-text bg-white border-end-0 fw-semibold">Total</label>
+                    <span class="input-group-text border-start-0 border-end-0">$</span>
+                    <input type="number" step="0.01" min="0" class="form-control text-end" id="purchase-total"
+                        name="total" readonly>
+                </div>
+            </div>
+
+        </div>
+
+        <input type="hidden" name="items_json" id="items-json">
+        <div id="items-error" class="alert alert-danger d-none mt-3"></div>
+    </div>
+
+    <div class="card-body border-top d-flex justify-content-end gap-2">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="btnSubmitPurchase">Save purchase</button>
+    </div>
+</form>
+
+<div id="alert-container" class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index:1080;">
+    {% if form and form.errors %}
+    <div class="alert alert-danger">
+        <ul class="mb-0 small">
+            {% for field, errs in form.errors.items %}
+            {% for err in errs %}
+            <li>{{ field }} — {{ err }}</li>
+            {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {# also show generic error_message if present #}
+    {% if error_message %}
+    <div class="alert alert-danger small">{{ error_message }}</div>
+    {% endif %}
+</div>
+
+<script type="module">
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+    const on = (el, ev, fn, opts) => el && el.addEventListener(ev, fn, opts);
+    const escapeHtml = t => String(t ?? "").replace(/[&<>"'`=\/]/g, s => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;", "/": "&#x2F;", "`": "&#x60;", "=": "&#x3D;" }[s] || s));
+    const showAlert = (msg, type = "success") => {
+        const id = "alert-" + Date.now();
+        const html = `<div id="${id}" class="alert alert-${type} alert-dismissible fade show mt-3 shadow-sm" role="alert">${escapeHtml(msg)}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+        $("#alert-container")?.insertAdjacentHTML("beforeend", html);
+        setTimeout(() => document.getElementById(id)?.remove(), 3500);
+    };
+
+    const form = $("#purchaseForm");
+    const tbody = $("#items-body");
+    const purchaseTotalInput = $("#purchase-total");
+    const itemsJsonInput = $("#items-json");
+    const itemsError = $("#items-error");
+    const addItemBtn = $("#btnAddItem");
+
+    const INGREDIENT_OPTIONS = `{
+  {% for ing in ingredients %}
+    "id{{ ing.id }}":"{{ ing.name|escapejs }}",
+  {% endfor %}
+  "":"" }`;
+
+    const buildUnitSelect = () => {
+        const select = document.createElement("select");
+        select.className = "form-select";
+        select.name = "metric_system_unit";
+        select.required = true;
+        select.innerHTML = `
+            <option value="" disabled selected>Select unit...</option>
+            <option value="1">un</option>
+            <option value="2">kg</option>
+            <option value="3">g</option>
+            <option value="4">mg</option>
+            <option value="5">L</option>
+            <option value="6">ml</option>`;
+        return select;
+    };
+
+    const formatNumber = v => {
+        const n = Number(v);
+        if (Number.isNaN(n)) return "";
+        return n.toFixed(2);
+    };
+
+    const recalcTotals = () => {
+        const rows = $$("#items-body tr[data-row]");
+        let sum = 0;
+        rows.forEach(tr => {
+            const qty = Number($('input[name="quantity"]', tr)?.value || 0);
+            const itemTotalRaw = $('input[name="item_total"]', tr)?.value || "0";
+            const itemTotal = parseFloat(itemTotalRaw.replace(/\./g, "").replace(",", "."));
+            if (!Number.isNaN(itemTotal)) sum += itemTotal;
+        });
+        if (!purchaseTotalInput.matches(":focus")) purchaseTotalInput.value = formatNumber(sum);
+    };
+
+    on(tbody, "blur", e => {
+        if (e.target.classList.contains("item-total-input")) {
+            recalcTotals();
+        }
+    }, true);
+
+    on(tbody, "input", e => {
+        if (e.target.classList.contains("item-total-input")) {
+            e.target.value = e.target.value.replace(/[^\d,.,,]/g, "");
+        }
+    });
+
+
+    const removeEmptyRowIfAny = () => tbody.querySelector(".empty-row")?.remove();
+    const ensureEmptyRowIfNone = () => { if (!tbody.querySelector("tr[data-row]")) tbody.insertAdjacentHTML("beforeend", `<tr class="empty-row"><td colspan="5" class="text-center text-muted py-4">No items yet.</td></tr>`); };
+
+    const addRow = () => {
+        removeEmptyRowIfAny();
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-row", "1");
+
+        const tdIng = document.createElement("td");
+        tdIng.innerHTML = `
+            <div class="position-relative">
+                <input type="text" class="form-control ingredient-input" autocomplete="off"
+                    placeholder="Type the ingredient name"
+                    aria-autocomplete="list" aria-expanded="false">
+                <input type="hidden" class="ingredient-id" name="ingredient_id">
+                <div class="list-group position-absolute w-100 d-none ingredient-suggest"
+                    role="listbox" style="z-index:1050; max-height:260px; overflow:auto;"></div>
+                <div class="invalid-feedback d-block d-none ingredient-error">
+                    Select an ingredient.
+                </div>
+            </div>
+            `;
+
+        const tdUnit = document.createElement("td");
+        tdUnit.appendChild(buildUnitSelect());
+
+        const tdQty = document.createElement("td");
+        tdQty.innerHTML = `<input type="number" class="form-control text-end" step="0.01" min="0" name="quantity" required>`;
+
+        const tdTotal = document.createElement("td");
+        tdTotal.innerHTML = `
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="text" class="form-control text-end item-total-input" name="item_total" required
+                    inputmode="decimal" placeholder="0,00">
+            </div>`;
+
+        const tdActions = document.createElement("td");
+        tdActions.className = "text-end";
+        tdActions.innerHTML = `
+            <button type="button" class="btn btn-outline-primary btn-sm btn-add-item">Save</button>
+            <button type="button" class="btn btn-outline-danger btn-sm btn-remove">Remove</button>`;
+
+        tr.append(tdIng, tdUnit, tdQty, tdTotal, tdActions);
+        tbody.appendChild(tr);
+    };
+
+    on(addItemBtn, "click", addRow);
+
+    on(tbody, "input", e => {
+        if (e.target.name === "quantity" || e.target.name === "item_total") recalcTotals();
+    });
+
+    on(tbody, "click", e => {
+        const btn = e.target.closest(".btn-remove");
+        if (!btn) return;
+        btn.closest("tr")?.remove();
+        ensureEmptyRowIfNone();
+        recalcTotals();
+    });
+
+    on(tbody, "click", e => {
+        const btn = e.target.closest(".btn-add-item");
+        if (!btn) return;
+        addRow();
+    });
+
+    on(form, "submit", e => {
+        const rows = $$('#items-body tr[data-row]');
+        rows.forEach(tr => {
+            const ingId = tr.querySelector('input[name="ingredient_id"]').value.trim();
+            if (!ingId) tr.remove();
+        });
+        itemsError.classList.add("d-none");
+        itemsError.textContent = "";
+        if (!rows.length) {
+            e.preventDefault();
+            itemsError.textContent = "Add at least one item.";
+            itemsError.classList.remove("d-none");
+            return;
+        }
+        const items = [];
+        for (const tr of rows) {
+            const ingredientId = $('input[name="ingredient_id"]', tr)?.value?.trim();
+            const unit = $('select[name="metric_system_unit"]', tr)?.value?.trim();
+            const quantity = $('input[name="quantity"]', tr)?.value?.trim();
+            const totalFormatted = $('input[name="item_total"]', tr)?.value?.trim() || "0";
+            const total = parseFloat(totalFormatted.replace(/\./g, "").replace(",", "."));
+
+            console.log(ingredientId)
+            console.log(unit)
+            console.log(quantity)
+
+            if (!ingredientId || !unit || !quantity || !total) {
+                e.preventDefault();
+                itemsError.textContent = "Complete all item fields.";
+                itemsError.classList.remove("d-none");
+                return;
+            }
+            items.push({
+                ingredient_id: Number(ingredientId),
+                metric_system_unit: Number(unit),
+                quantity: Number(quantity),
+                total: Number(total)
+            });
+        }
+        itemsJsonInput.value = JSON.stringify(items);
+    });
+
+    const select = (selector, root = document) => root.querySelector(selector);
+    const selectAll = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+    const onEvent = (element, event, handler) => element && element.addEventListener(event, handler);
+    const debounce = (callback, delay = 250) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => callback(...args), delay);
+        };
+    };
+
+    const supplierInput = select("#supplier-input");
+    const supplierHiddenInput = select("#supplier-id");
+    const suggestionsList = select("#supplier-suggest");
+    const supplierErrorMessage = select("#supplier-error");
+    const purchaseForm = select("form#purchaseForm") || supplierInput.closest("form");
+
+    const renderSupplierSuggestions = (suppliers) => {
+        suggestionsList.innerHTML = suppliers.map((supplier, index) => `
+            <button
+                type="button"
+                class="list-group-item list-group-item-action"
+                role="option"
+                data-id="${supplier.id}"
+                data-name="${supplier.name}"
+                ${index === 0 ? 'aria-selected="true"' : ''}>
+                    ${supplier.name}
+            </button>
+  `).join("");
+
+        suggestionsList.classList.toggle("d-none", suppliers.length === 0);
+        supplierInput.setAttribute("aria-expanded", String(suppliers.length > 0));
+    };
+
+    const fetchSupplierSuggestions = async (query) => {
+        if (!query || query.length < 2) {
+            renderSupplierSuggestions([]);
+            return;
+        }
+
+        const url = `{% url 'purchases:supplier_search' %}?q=` + encodeURIComponent(query);
+        const response = await fetch(url, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+        const data = await response.json();
+        renderSupplierSuggestions(data.results || []);
+    };
+
+    const selectSupplier = (button) => {
+        if (!button) return;
+        supplierInput.value = button.dataset.name || "";
+        supplierHiddenInput.value = button.dataset.id || "";
+        renderSupplierSuggestions([]);
+        supplierErrorMessage?.classList.add("d-none");
+    };
+
+    const moveSelection = (direction) => {
+        const buttons = selectAll(".list-group-item", suggestionsList);
+        if (!buttons.length) return;
+
+        let selectedIndex = buttons.findIndex(btn => btn.getAttribute("aria-selected") === "true");
+        selectedIndex = (selectedIndex === -1 ? 0 : selectedIndex);
+        buttons[selectedIndex].removeAttribute("aria-selected");
+
+        if (direction === "down") selectedIndex++;
+        if (direction === "up") selectedIndex--;
+
+        if (selectedIndex < 0) selectedIndex = buttons.length - 1;
+        if (selectedIndex >= buttons.length) selectedIndex = 0;
+
+        buttons[selectedIndex].setAttribute("aria-selected", "true");
+        buttons[selectedIndex].scrollIntoView({ block: "nearest" });
+    };
+
+    onEvent(supplierInput, "input", debounce((event) => {
+        supplierHiddenInput.value = "";
+        fetchSupplierSuggestions(event.target.value.trim());
+    }));
+
+    onEvent(supplierInput, "keydown", (event) => {
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            moveSelection("down");
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            moveSelection("up");
+        } else if (event.key === "Enter") {
+            const activeButton = select('.list-group-item[aria-selected="true"]', suggestionsList);
+            if (activeButton) {
+                event.preventDefault();
+                selectSupplier(activeButton);
+            }
+        } else if (event.key === "Escape") {
+            renderSupplierSuggestions([]);
+        }
+    });
+
+    onEvent(suggestionsList, "click", (event) => {
+        const clickedButton = event.target.closest(".list-group-item");
+        if (clickedButton) selectSupplier(clickedButton);
+    });
+
+    onEvent(supplierInput, "blur", () => setTimeout(() => renderSupplierSuggestions([]), 120));
+    onEvent(suggestionsList, "blur", () => setTimeout(() => renderSupplierSuggestions([]), 120));
+
+    onEvent(purchaseForm, "submit", (event) => {
+        if (!supplierHiddenInput.value) {
+            event.preventDefault();
+            supplierErrorMessage.textContent = "Selecione um fornecedor da lista.";
+            supplierErrorMessage.classList.remove("d-none");
+            supplierInput.focus();
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const inputDate = document.getElementById("purchase-datetime");
+        const today = new Date().toISOString().split("T")[0];
+        inputDate.value = today;
+    });
+
+    const fetchIngredientSuggestions = async (query, listElement) => {
+        if (!query || query.length < 2) {
+            listElement.classList.add("d-none");
+            listElement.innerHTML = "";
+            return;
+        }
+
+        const url = `{% url 'purchases:ingredient_search' %}?q=` + encodeURIComponent(query);
+        const response = await fetch(url, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+        const data = await response.json();
+
+        listElement.innerHTML = data.results.map((item, index) => `
+            <button 
+                type="button" 
+                class="list-group-item list-group-item-action" 
+                role="option"
+                data-id="${item.id}"
+                data-name="${item.name}"
+                ${index === 0 ? 'aria-selected="true"' : ''}>
+                ${item.name}
+            </button>
+  `).join("");
+
+        listElement.classList.toggle("d-none", data.results.length === 0);
+    };
+
+    const handleIngredientSelection = (button, input, hiddenInput, list, errorDiv) => {
+        if (!button) return;
+        input.value = button.dataset.name;
+        hiddenInput.value = button.dataset.id;
+        list.classList.add("d-none");
+        list.innerHTML = "";
+        errorDiv.classList.add("d-none");
+    };
+
+    on(tbody, "input", debounce(e => {
+        if (!e.target.classList.contains("ingredient-input")) return;
+        const row = e.target.closest("tr");
+        const list = row.querySelector(".ingredient-suggest");
+        row.querySelector(".ingredient-id").value = "";
+        fetchIngredientSuggestions(e.target.value.trim(), list);
+    }));
+
+    on(tbody, "keydown", e => {
+        const input = e.target.closest(".ingredient-input");
+        if (!input) return;
+        const row = e.target.closest("tr");
+        const list = row.querySelector(".ingredient-suggest");
+        const buttons = Array.from(list.querySelectorAll(".list-group-item"));
+        if (!buttons.length) return;
+
+        let selectedIndex = buttons.findIndex(btn => btn.getAttribute("aria-selected") === "true");
+        selectedIndex = selectedIndex === -1 ? 0 : selectedIndex;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            selectedIndex = (selectedIndex + 1) % buttons.length;
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            selectedIndex = (selectedIndex - 1 + buttons.length) % buttons.length;
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            handleIngredientSelection(buttons[selectedIndex], input, row.querySelector(".ingredient-id"), list, row.querySelector(".ingredient-error"));
+        } else {
+            return;
+        }
+
+        buttons.forEach(btn => btn.removeAttribute("aria-selected"));
+        buttons[selectedIndex].setAttribute("aria-selected", "true");
+        buttons[selectedIndex].scrollIntoView({ block: "nearest" });
+    });
+
+    on(tbody, "click", e => {
+        const button = e.target.closest(".list-group-item");
+        if (!button) return;
+        const row = button.closest("tr");
+        handleIngredientSelection(button, row.querySelector(".ingredient-input"), row.querySelector(".ingredient-id"), row.querySelector(".ingredient-suggest"), row.querySelector(".ingredient-error"));
+    });
+
+    on(tbody, "blur", e => {
+        if (!e.target.classList.contains("ingredient-input")) return;
+        setTimeout(() => {
+            const row = e.target.closest("tr");
+            row.querySelector(".ingredient-suggest").classList.add("d-none");
+        }, 150);
+    }, true);
+</script>
+
+
+{% endblock %}

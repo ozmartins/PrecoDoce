@@ -53,3 +53,12 @@ def supplier_delete(request, pk: int):
     if is_ajax(request):
         return JsonResponse({"ok": True})
     return redirect("purchases:supplier_recover")
+
+@require_GET
+def supplier_search(request):
+    q = (request.GET.get("q") or "").strip()
+    results = []
+    if q:
+        qs = Supplier.objects.filter(name__icontains=q).order_by("name")[:10]
+        results = [{"id": s.id, "name": s.name} for s in qs]
+    return JsonResponse({"results": results})
