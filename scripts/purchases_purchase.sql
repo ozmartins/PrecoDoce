@@ -1,52 +1,71 @@
 ﻿DELETE FROM purchases_purchase;
-INSERT INTO purchases_purchase (date, total, supplier_id) VALUES
-('2025-08-01', 185.50, 152),
-('2025-08-02', 240.00, 164),
-('2025-08-03', 385.75, 155),
-('2025-08-04', 1290.00, 168),
-('2025-08-05', 540.90, 171),
-('2025-08-06', 890.50, 177),
-('2025-08-07', 455.70, 150),
-('2025-08-08', 1475.20, 162),
-('2025-08-09', 775.40, 153),
-('2025-08-10', 980.00, 166),
-('2025-08-11', 630.80, 158),
-('2025-08-12', 1230.00, 160),
-('2025-08-13', 295.30, 176),
-('2025-08-14', 875.20, 172),
-('2025-08-15', 1560.60, 151),
-('2025-08-16', 410.10, 169),
-('2025-08-17', 325.00, 163),
-('2025-08-18', 720.70, 154),
-('2025-08-19', 1180.00, 167),
-('2025-08-20', 960.00, 165),
-('2025-08-21', 145.25, 159),
-('2025-08-22', 1890.00, 157),
-('2025-08-23', 420.50, 156),
-('2025-08-24', 755.60, 170),
-('2025-08-25', 930.80, 173),
-('2025-08-26', 315.00, 161),
-('2025-08-27', 1125.45, 175),
-('2025-08-28', 645.90, 174),
-('2025-08-29', 285.70, 150),
-('2025-08-30', 1725.10, 164),
-('2025-09-01', 980.00, 160),
-('2025-09-02', 1085.25, 153),
-('2025-09-03', 245.30, 176),
-('2025-09-04', 330.90, 165),
-('2025-09-05', 860.75, 166),
-('2025-09-06', 1275.00, 169),
-('2025-09-07', 1120.20, 177),
-('2025-09-08', 295.30, 155),
-('2025-09-09', 775.00, 163),
-('2025-09-10', 450.60, 152),
-('2025-09-11', 1690.50, 162),
-('2025-09-12', 990.90, 170),
-('2025-09-13', 540.00, 174),
-('2025-09-14', 185.75, 151),
-('2025-09-15', 1170.30, 171),
-('2025-09-16', 380.40, 154),
-('2025-09-17', 625.90, 159),
-('2025-09-18', 1325.00, 166),
-('2025-09-19', 275.25, 158),
-('2025-09-20', 845.80, 168);
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (100.00, 1, '2025-01-01');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (200.00, 2, '2025-01-02');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (300.00, 3, '2025-01-03');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (400.00, 4, '2025-01-04');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (500.00, 5, '2025-01-05');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (600.00, 6, '2025-01-06');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (700.00, 7, '2025-01-07');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (800.00, 8, '2025-01-08');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (900.00, 9, '2025-01-09');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1000.00, 10, '2025-01-10');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1100.00, 11, '2025-01-11');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1200.00, 12, '2025-01-12');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1300.00, 13, '2025-01-13');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1400.00, 14, '2025-01-14');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1500.00, 15, '2025-01-15');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1600.00, 16, '2025-01-16');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1700.00, 17, '2025-01-17');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1800.00, 18, '2025-01-18');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (1900.00, 19, '2025-01-19');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2000.00, 20, '2025-01-20');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2100.00, 21, '2025-01-21');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2200.00, 22, '2025-01-22');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2300.00, 23, '2025-01-23');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2400.00, 24, '2025-01-24');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2500.00, 25, '2025-01-25');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2600.00, 26, '2025-01-26');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2700.00, 27, '2025-01-27');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2800.00, 28, '2025-01-28');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (2900.00, 29, '2025-01-29');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3000.00, 30, '2025-01-30');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3100.00, 31, '2025-01-31');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3200.00, 32, '2025-02-01');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3300.00, 33, '2025-02-02');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3400.00, 34, '2025-02-03');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3500.00, 35, '2025-02-04');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3600.00, 36, '2025-02-05');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3700.00, 37, '2025-02-06');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3800.00, 38, '2025-02-07');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (3900.00, 39, '2025-02-08');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4000.00, 40, '2025-02-09');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4100.00, 41, '2025-02-10');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4200.00, 42, '2025-02-11');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4300.00, 43, '2025-02-12');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4400.00, 44, '2025-02-13');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4500.00, 45, '2025-02-14');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4600.00, 46, '2025-02-15');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4700.00, 47, '2025-02-16');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4800.00, 48, '2025-02-17');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (4900.00, 49, '2025-02-18');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5000.00, 50, '2025-02-19');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5100.00, 51, '2025-02-20');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5200.00, 52, '2025-02-21');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5300.00, 53, '2025-02-22');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5400.00, 54, '2025-02-23');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5500.00, 55, '2025-02-24');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5600.00, 56, '2025-02-25');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5700.00, 57, '2025-02-26');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5800.00, 58, '2025-02-27');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (5900.00, 59, '2025-02-28');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6000.00, 60, '2025-03-01');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6100.00, 61, '2025-03-02');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6200.00, 62, '2025-03-03');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6300.00, 63, '2025-03-04');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6400.00, 64, '2025-03-05');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6500.00, 65, '2025-03-06');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6600.00, 66, '2025-03-07');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6700.00, 67, '2025-03-08');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6800.00, 68, '2025-03-09');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (6900.00, 69, '2025-03-10');
+INSERT INTO purchases_purchase (total, supplier_id, date) VALUES (7000.00, 70, '2025-03-11');
