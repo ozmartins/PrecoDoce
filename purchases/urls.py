@@ -18,7 +18,5 @@ urlpatterns = [
 
     path('create/', views.purchase_create, name='purchase_create'),
     path('recover/', views.purchase_recover, name="purchase_recover"),
-    path('update/<int:pk>', views.purchase_update, name='purchase_update'),
-    path('update/<int:pk>/', views.purchase_update, name='purchase_update'),
     path('delete/<int:pk>/', views.purchase_delete, name='purchase_delete')
 ]

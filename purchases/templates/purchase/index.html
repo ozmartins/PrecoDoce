@@ -43,10 +43,6 @@
                         <td>{{ p.supplier.name }}</td>
                         <td class="text-end">R$ {{ p.total|floatformat:2 }}</td>
                         <td class="text-end">
-                            <button type="button" class="btn btn-sm btn-outline-primary btn-edit-purchase"
-                                data-id="{{ p.id }}" data-name="#{{ p.id }} — {{ p.supplier.name }}">
-                                Edit
-                            </button>
                             <button type="button" class="btn btn-sm btn-outline-danger btn-delete-purchase"
                                 data-id="{{ p.id }}" data-name="#{{ p.id }} — {{ p.supplier.name }}">
                                 Delete
@@ -193,20 +189,7 @@
             on(modalEl, "shown.bs.modal", () => btnConfirm?.focus());
         };
 
-        document.addEventListener("DOMContentLoaded", initDelete);
-
-        const editDelegate = (root, ev, sel, fn) => root.addEventListener(ev, e => { const t = e.target.closest(sel); if (t && root.contains(t)) fn(e, t); });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            console.log('btn-edit-purchase')
-            editDelegate(document, "click", ".btn-edit-purchase", (_e, btn) => {
-                const id = btn.dataset.id;
-                if (id) {
-                    const url = `{% url 'purchases:purchase_update' 0 %}`.replace("0", encodeURIComponent(id));
-                    window.location.href = url;
-                }
-            });
-        });        
+        document.addEventListener("DOMContentLoaded", initDelete);        
     </script>
 </main>
 {% endblock content %}

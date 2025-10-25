@@ -151,6 +151,7 @@
             const qty = Number($('input[name="quantity"]', tr)?.value || 0);
             const itemTotalRaw = $('input[name="item_total"]', tr)?.value || "0";
             const itemTotal = parseFloat(itemTotalRaw.replace(/\./g, "").replace(",", "."));
+
             if (!Number.isNaN(itemTotal)) sum += itemTotal;
         });
         if (!purchaseTotalInput.matches(":focus")) purchaseTotalInput.value = formatNumber(sum);

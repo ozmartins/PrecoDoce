@@ -9,11 +9,6 @@ from ..forms import PurchaseForm
 from .utils import is_ajax
 import json
 
-def _items_qs(purchase: Purchase):    
-    return (purchase.purchaseitem_set
-            .select_related("ingredient")
-            .order_by("id"))
-
 @require_GET
 def purchase_recover(request):    
     q = request.GET.get("q", "")    
@@ -93,80 +88,6 @@ def purchase_create(request):
         return JsonResponse({"ok": True, "id": purchase.pk})
 
     return redirect("purchases:purchase_recover")
-
-@require_http_methods(["GET", "POST"])
-def purchase_update(request, pk: int):
-    purchase = get_object_or_404(Purchase, pk=pk)
-
-    if request.method == "GET":
-        form = PurchaseForm(instance=purchase)
-        items = _items_qs(purchase)
-        return render(
-            request,
-            "purchase/update.html",
-            {"form": form, "purchase": purchase, "purchase_items": items},
-        )
-
-
-    form = PurchaseForm(request.POST, instance=purchase)
-    if not form.is_valid():
-        if is_ajax(request):
-            return JsonResponse({"ok": False, "errors": form.errors}, status=400)
-        items = _items_qs(purchase)
-        return render(
-            request,
-            "purchase/update.html",
-            {"form": form, "purchase": purchase, "purchase_items": items},
-            status=400,
-        )
-
-    try:
-        with transaction.atomic():
-            purchase = form.save(commit=False)
-            purchase.date = purchase.date or timezone.now()
-            purchase.total = 0
-            purchase.save()
-            
-            items_json = request.POST.get("items_json", "[]")
-            items_data = json.loads(items_json)
-            
-            purchase.purchaseitem_set.all().delete()
-
-            for item in items_data:                
-                ingredient = Ingredient.objects.get(pk=item["ingredient_id"])                
-                PurchaseItem.objects.create(
-                    purchase=purchase,
-                    ingredient=ingredient,
-                    quantity=item["quantity"],
-                    metric_system_unit=item["metric_system_unit"],
-                    total=item["total"],
-                )
-            
-            total_sum = sum((i.get("total") or 0) for i in items_data)
-            purchase.total = total_sum
-            purchase.save()
-
-    except Exception as e:
-        if is_ajax(request):
-            return JsonResponse({"ok": False, "error": str(e)}, status=400)        
-        items = _items_qs(purchase)
-        return render(
-            request,
-            "purchase/update.html",
-            {
-                "form": form,
-                "purchase": purchase,
-                "purchase_items": items,
-                "error_message": str(e),
-            },
-            status=400,
-        )
-
-    if is_ajax(request):
-        return JsonResponse({"ok": True, "id": purchase.pk})
-
-    return redirect("purchases:purchase_recover")
-
 
 @require_POST
 def purchase_delete(request, pk: int):
